@@ -17,10 +17,13 @@ wassym = True
 to_solve = ''
 procc = tkinter.Label(cal, text=to_solve, font=fon.Font(size=15))
 procc.place(x=0, y=0)
+aft_cal = tkinter.Label(cal, text='', font=fon.Font(size=25))
+aft_cal.place(x=0, y=180)
 ###
 def add(input):
     global to_solve
     global wassym
+    aft_cal.config(text='')
     if input == '+' or input == '-' or input == 'x' or input == '÷':
         if wassym:
             pass
@@ -34,6 +37,7 @@ def add(input):
 def delt():
     global to_solve
     global wassym
+    aft_cal.config(text='')
     if len(to_solve) != 0:
         if to_solve[-1] == ' ':
             to_solve = to_solve[:len(to_solve)-3]
@@ -49,6 +53,7 @@ def delt():
 def cle():
     global to_solve
     global wassym
+    aft_cal.config(text='')
     wassym = True
     to_solve = ""
     procc.config(text=to_solve)
@@ -106,9 +111,10 @@ def get_ans():
         client_socket.sendto(request.encode("utf-8"), (server_address, server_port))
         # 서버로부터 수신
         response, addr = client_socket.recvfrom(1024)
-        to_solve = response.decode("utf-8")
+        out = response.decode("utf-8")
+        to_solve = out
         #
-        procc.config(text=to_solve)
+        aft_cal.config(text=f'= {out}')
     except Exception as e:
         mess.showinfo("error", e)
 # get answer
