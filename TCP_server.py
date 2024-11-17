@@ -12,6 +12,7 @@ try:
     while True:
         print("waiting connection")
         client_socket, client_address = server_socket.accept()
+        print(f"connection form {client_address}")
         data = client_socket.recv(1024).decode("utf-8")
         if data == 'EXIT':
             break
@@ -22,5 +23,5 @@ try:
 except Exception as e:
     print(f"오류: {e}")
 finally:
-    print("END")
+    print("SEVER PROGRAM END")
     client_socket.close()

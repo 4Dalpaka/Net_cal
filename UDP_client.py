@@ -8,6 +8,10 @@ cal=tkinter.Tk()
 cal.title("Calculator")
 cal.geometry("360x570+100+100")
 cal.resizable(False, False)
+# set server
+server_address = "127.0.0.1"
+server_port = 12345
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 # proccess
 wassym = True
 to_solve = ''
@@ -90,13 +94,6 @@ nine_button.place(x=bsx+bwidth*2, y=bsy, width=bwidth, height=bheight)
 def get_ans():
     global to_solve
     try:
-        # 서버 설정
-        server_address = "127.0.0.1"
-        server_port = 12345
-        # 서버에 연결
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((server_address, server_port))
-        print(client_socket)
         # 전송 준비
         to_change = list(to_solve)
         for k in range(len(to_change)):
@@ -105,10 +102,13 @@ def get_ans():
             elif to_change[k] == '÷':
                 to_change[k] = '/'
         request = ''.join(to_change)
-        client_socket.send(request.encode("utf-8"))
+        # 서버로 전송
+        client_socket.sendto(request.encode("utf-8"), (server_address, server_port))
         # 서버로부터 수신
-        response = client_socket.recv(1024).decode("utf-8")
-        procc.config(text=response)
+        response, addr = client_socket.recvfrom(1024)
+        to_solve = response.decode("utf-8")
+        #
+        procc.config(text=to_solve)
     except Exception as e:
         mess.showinfo("error", e)
 # get answer
@@ -116,15 +116,12 @@ go_button = tkinter.Button(cal, text = "=", overrelief="raised", font = button_f
 go_button.place(x=bsx, y=bsy+bheight*4, width=360, height=bheight)
 # 창 닫히면 서버 프로그램도 종료
 def atclose():
-    #
-    server_address = "127.0.0.1"
-    server_port = 12345
-    #
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((server_address, server_port))
-    #
-    request = 'EXIT'
-    client_socket.send(request.encode("utf-8"))
-    cal.destroy()
+    try:
+        #
+        request = 'EXIT'
+        client_socket.sendto(request.encode("utf-8"), (server_address, server_port))
+        cal.destroy()
+    except:
+        cal.destroy()
 cal.protocol('WM_DELETE_WINDOW', atclose)
 cal.mainloop()
