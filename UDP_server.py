@@ -15,7 +15,39 @@ try:
         data = data.decode("utf-8")
         if data == 'EXIT':
             break
-        response = f'{eval(data)}'
+        to_cal = data.split(' ')
+        if len(to_cal) == 0:
+            response = 'no input'
+        elif len(to_cal) == 1:
+            response = data
+        else:
+            nextcal = ''
+            cal_ing = list()
+            for i in to_cal:
+                if i == '*' or i == '/':
+                    nextcal = i
+                else:
+                    if nextcal == '*':
+                        cal_ing[-1] = f'{eval(cal_ing[-1]) * eval(i)}'
+                        nextcal = ''
+                    elif nextcal == '/':
+                        cal_ing[-1] = f'{eval(cal_ing[-1]) / eval(i)}'
+                        nextcal = ''
+                    else:
+                        cal_ing.append(i)
+            sum = 0
+            nextcal = '+'
+            for k in cal_ing:
+                if k == '+':
+                    nextcal = '+'
+                elif k == '-':
+                    nextcal = '-'
+                else:
+                    if nextcal == '+':
+                        sum += eval(k)
+                    else:
+                        sum -= eval(k)
+            response = f'{sum}'
         # finished
         print("complete")
         server_socket.sendto(response.encode("utf-8"), client_address)

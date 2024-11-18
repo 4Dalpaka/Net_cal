@@ -11,32 +11,40 @@ cal.resizable(False, False)
 # set server
 server_address = "127.0.0.1"
 server_port = 12345
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 # proccess
 wassym = True
 to_solve = ''
 procc = tkinter.Label(cal, text=to_solve, font=fon.Font(size=15))
 procc.place(x=0, y=0)
+# result
+new_cal = False
 aft_cal = tkinter.Label(cal, text='', font=fon.Font(size=25))
 aft_cal.place(x=0, y=180)
 ###
 def add(input):
     global to_solve
     global wassym
+    global new_cal
     aft_cal.config(text='')
     if input == '+' or input == '-' or input == 'x' or input == '÷':
         if wassym:
             pass
         else:
+            new_cal = False
             to_solve+=f' {input} '
             wassym = True
     else:
+        if new_cal:
+            to_solve = ''
+            new_cal = False
         to_solve+=input
         wassym = False
     procc.config(text=to_solve)
 def delt():
     global to_solve
     global wassym
+    global new_cal
+    new_cal = False
     aft_cal.config(text='')
     if len(to_solve) != 0:
         if to_solve[-1] == ' ':
@@ -53,9 +61,11 @@ def delt():
 def cle():
     global to_solve
     global wassym
+    global new_cal
+    new_cal = False
     aft_cal.config(text='')
     wassym = True
-    to_solve = ""
+    to_solve = ''
     procc.config(text=to_solve)
 # cal button
 bsx = 0
@@ -97,8 +107,14 @@ seven_button.place(x=bsx, y=bsy, width=bwidth, height=bheight)
 eight_button.place(x=bsx+bwidth, y=bsy, width=bwidth, height=bheight)
 nine_button.place(x=bsx+bwidth*2, y=bsy, width=bwidth, height=bheight)
 def get_ans():
+    global server_address
+    global server_port
+    global wassym
     global to_solve
+    global new_cal
     try:
+        
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # 전송 준비
         to_change = list(to_solve)
         for k in range(len(to_change)):
@@ -106,14 +122,19 @@ def get_ans():
                 to_change[k] = '*'
             elif to_change[k] == '÷':
                 to_change[k] = '/'
+        if to_change[-1] == ' ':
+            to_change = to_change[0:-3]
         request = ''.join(to_change)
+        procc.config(text=request)
         # 서버로 전송
         client_socket.sendto(request.encode("utf-8"), (server_address, server_port))
         # 서버로부터 수신
         response, addr = client_socket.recvfrom(1024)
         out = response.decode("utf-8")
+        # cal 출력
         to_solve = out
-        #
+        new_cal = True
+        wassym = False
         aft_cal.config(text=f'= {out}')
     except Exception as e:
         mess.showinfo("error", e)
@@ -122,7 +143,10 @@ go_button = tkinter.Button(cal, text = "=", overrelief="raised", font = button_f
 go_button.place(x=bsx, y=bsy+bheight*4, width=360, height=bheight)
 # 창 닫히면 서버 프로그램도 종료
 def atclose():
+    global server_address
+    global server_port
     try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         #
         request = 'EXIT'
         client_socket.sendto(request.encode("utf-8"), (server_address, server_port))
