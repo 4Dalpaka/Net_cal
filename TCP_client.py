@@ -118,15 +118,16 @@ def get_ans():
         print(client_socket)
         # 전송 준비
         to_change = list(to_solve)
+        if to_change[-1] == ' ':
+            to_change = to_change[0:-3]
+        procc.config(text=''.join(to_change))
         for k in range(len(to_change)):
             if to_change[k] == 'x':
                 to_change[k] = '*'
             elif to_change[k] == '÷':
                 to_change[k] = '/'
-        if to_change[-1] == ' ':
-            to_change = to_change[0:-3]
         request = ''.join(to_change)
-        procc.config(text=request)
+        # 서버로 전송
         client_socket.send(request.encode("utf-8"))
         # 서버로부터 수신
         response = client_socket.recv(1024).decode("utf-8")
