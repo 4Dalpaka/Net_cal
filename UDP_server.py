@@ -6,20 +6,19 @@ port = 12345
 # 소켓 생성
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind((host, port))
-
-try:
-    while True:
+while True:
+    try:
         print("waiting connection")
         data, client_address = server_socket.recvfrom(1024)
         print(f"connection form {client_address}")
         data = data.decode("utf-8")
         if data == 'EXIT':
+            print("SEVER PROGRAM END")
+            server_socket.close()
             break
         to_cal = data.split(' ')
-        if len(to_cal) == 0:
-            response = 'no input'
-        elif len(to_cal) == 1:
-            response = data
+        if len(to_cal) == 1:
+            response = f'c {data}'
         else:
             nextcal = ''
             cal_ing = list()
@@ -47,12 +46,12 @@ try:
                         sum += eval(k)
                     else:
                         sum -= eval(k)
-            response = f'{sum}'
+            response = f'c {sum}'
         # finished
         print("complete")
         server_socket.sendto(response.encode("utf-8"), client_address)
-except Exception as e:
-    print(f"오류: {e}")
-finally:
-    print("SEVER PROGRAM END")
-    server_socket.close()
+    except Exception as e:
+        print(f"오류: {e}")
+        print("error send")
+        response = f'e {e}'
+        server_socket.sendto(response.encode("utf-8"), client_address)

@@ -14,6 +14,7 @@ server_port = 12345
 # proccess
 wassym = True
 to_solve = ''
+only_zero = False
 procc = tkinter.Label(cal, text=to_solve, font=fon.Font(size=15))
 procc.place(x=0, y=0)
 # result
@@ -25,6 +26,7 @@ def add(input):
     global to_solve
     global wassym
     global new_cal
+    global only_zero
     aft_cal.config(text='')
     if input == '+' or input == '-' or input == 'x' or input == '÷':
         if wassym:
@@ -37,35 +39,45 @@ def add(input):
         if new_cal:
             to_solve = ''
             new_cal = False
-        to_solve+=input
-        wassym = False
+        if only_zero:
+            pass
+        else:
+            if wassym and input == '0':
+                only_zero = True
+            to_solve+=input
+            wassym = False
     procc.config(text=to_solve)
 def delt():
     global to_solve
     global wassym
     global new_cal
+    global only_zero
     new_cal = False
     aft_cal.config(text='')
     if len(to_solve) != 0:
-        if to_solve[-1] == ' ':
+        if to_solve[-1] == ' ': # 기호 삭제
             to_solve = to_solve[:len(to_solve)-3]
             wassym = False
-        else:
+        else: # 숫자 삭제
             to_solve = to_solve[:len(to_solve)-1]
             if len(to_solve) != 0:
                 if to_solve[-1] == ' ':
                     wassym = True
+                    only_zero = False    
             else:
                 wassym = True
+                only_zero = False
     procc.config(text=to_solve)
 def cle():
     global to_solve
     global wassym
     global new_cal
+    global only_zero
     new_cal = False
     aft_cal.config(text='')
     wassym = True
     to_solve = ''
+    only_zero = False
     procc.config(text=to_solve)
 # cal button
 bsx = 0
@@ -112,11 +124,12 @@ def get_ans():
     global wassym
     global to_solve
     global new_cal
+    global only_zero
     try:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((server_address, server_port))
-        print(client_socket)
         # 전송 준비
+        if to_solve == '':
+            mess.showinfo("error", "no input")
+            return
         to_change = list(to_solve)
         if to_change[-1] == ' ':
             to_change = to_change[0:-3]
@@ -128,14 +141,30 @@ def get_ans():
                 to_change[k] = '/'
         request = ''.join(to_change)
         # 서버로 전송
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((server_address, server_port))
+        print(client_socket)
         client_socket.send(request.encode("utf-8"))
         # 서버로부터 수신
         response = client_socket.recv(1024).decode("utf-8")
-        # cal 출력
-        to_solve = response
-        new_cal = True
-        wassym = False
-        aft_cal.config(text=f'= {response}')
+        # error & cal 구분
+        if response[0] == 'c': # cal 출력
+            response = response[2:]
+            to_solve = response
+            new_cal = True
+            wassym = False
+            only_zero = False
+            if response == response * 2:
+                only_zero = True
+            aft_cal.config(text=f'= {response}')
+        elif response[0] == 'e':
+            to_solve = ''
+            new_cal = False
+            wassym = True
+            only_zero = False
+            procc.config(text=to_solve)
+            response = response[2:]
+            mess.showinfo("error", response)
     except Exception as e:
         mess.showinfo("error", e)
 # get answer
